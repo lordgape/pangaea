@@ -1,0 +1,93 @@
+version: "3.7"
+services:
+  redis:
+    container_name: redis-pangaea
+    image: redis
+    networks:
+      pangaea-network:
+        ipv4_address: 172.25.0.23
+        aliases:
+          - redis.pangaea.local
+
+  redis-commander:
+    container_name: redis-commander-pangaea
+    hostname: redis-commander-pangaea
+    image: rediscommander/redis-commander:latest
+    environment:
+      - REDIS_HOSTS=local:172.25.0.23:6379
+    networks:
+      pangaea-network:
+        ipv4_address: 172.25.0.24
+        aliases:
+          - redis-commander.pangaea.local
+
+  parrot:
+    container_name: parrot
+    build:
+      context: ./www/parrot
+      dockerfile: local.Dockerfile
+    depends_on:
+      - redis
+    volumes:
+      - "./www/parrot/:/usr/src/app"
+    networks:
+      pangaea-network:
+        ipv4_address: 172.25.0.25
+        aliases:
+          - parrot.local
+    command: >
+      bash -c "
+      echo 'Installing parrot packages dependencies...'
+      && npm i
+      && echo 'Bootstraping application...'
+      && npm run start:dev
+      "
+
+  minion:
+    container_name: minion
+    build:
+      context: ./www/minion
+      dockerfile: local.Dockerfile
+    depends_on:
+      - parrot
+    volumes:
+      - "./www/minion/:/usr/src/app"
+    networks:
+      pangaea-network:
+        ipv4_address: 172.25.0.26
+        aliases:
+          - minion.local
+    command: >
+      bash -c "
+      echo 'Installing minion packages dependencies...'
+      && npm i
+      && echo 'Bootstraping application...'
+      && npm run start:dev
+      "
+
+  consumer:
+      container_name: consumer
+      build:
+        context: ./www/consumer
+        dockerfile: local.Dockerfile
+      volumes:
+        - "./www/consumer/:/usr/src/app"
+      networks:
+        pangaea-network:
+          ipv4_address: 172.25.0.27
+          aliases:
+            - consumer.local
+      command: >
+        bash -c "
+        echo 'Installing consumer packages dependencies...'
+        && npm i
+        && echo 'Bootstraping application...'
+        && npm run start:dev
+        "
+
+networks:
+  pangaea-network:
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.25.0.0/16
