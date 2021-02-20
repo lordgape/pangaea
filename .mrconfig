@@ -1,0 +1,12 @@
+[.]
+checkout = git clone 'git@github.com:JumiaMDS/my-jumia-local.git' 'pangaea'
+
+[www/parrot]
+checkout = git clone 'https://github.com/lordgape/parrot.git' 'parrot'
+
+[www/minion]
+checkout = git clone 'https://github.com/lordgape/minion.git' 'minion'
+
+[www/consumer]
+checkout = git clone 'https://github.com/lordgape/consumer.git' 'consumer'
+
